@@ -16,9 +16,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "push": "git add . && git commit -am . && git push origin main",
     "upload": "npm run build && tar -zcvf build.tar.gz build/ && scp -i ../../../key.cer build.tar.gz root@13.246.12.22:/var/www/html/note.ai/ || rm build.tar.gz",
-    "deploy": "npm run push && npm run upload",
-    "push": "git add . && git commit -am . && git push origin main"
+    "deploy": "npm run push && npm run upload"
   },
   "eslintConfig": {
     "extends": [
