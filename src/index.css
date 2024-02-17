@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: "arboria-book";
+  src: url(/src/assets/fonts/Arboria-Book.ttf);
+}
+
+@font-face {
+  font-family: "arboria-bold";
+  src: url(/src/assets/fonts/Arboria-Bold.ttf);
+}
+
+h1 {
+  font-family: "arboria-bold";
+  font-size: 2.5rem;
+  color: #fff;
+}
+
+h2 {
+  font-family: "arboria-book";
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.completed {
+  text-decoration: line-through;
+  color: #9b9b9b8e;
+}
