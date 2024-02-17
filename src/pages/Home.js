@@ -7,7 +7,7 @@ function Home() {
     <div>
       <Navbar />
       <Notes />
-      <FeatherButton />
+      {/* <FeatherButton /> */}
       {/* <Footer /> */}
     </div>
   );

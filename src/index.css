@@ -18,7 +18,8 @@ h1 {
   color: #fff;
 }
 
-h2 {
+h2,
+input {
   font-family: "arboria-book";
   font-size: 1.5rem;
   color: #fff;
