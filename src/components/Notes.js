@@ -4,8 +4,9 @@ import FeatherButton from "./FeatherButton";
 import feather from "../assets/icons/feather.svg";
 import { useNavigate } from "react-router-dom";
 import io from "socket.io-client";
+import Progress from "./Progress";
 
-const api = axios.create({ baseURL: "http://localhost:3001/" });
+const api = axios.create({ baseURL: "https://christianmacarthur.com:3004/" });
 // const ai_api = axios.create({ baseURL: "http://localhost:11434/" });
 const ai_api = axios.create({
   baseURL: "https://fc11-34-27-14-41.ngrok-free.app/",
@@ -25,7 +26,7 @@ function Notes() {
     message: "",
     type: "",
   });
-  const socket = io("http://localhost:3002", {
+  const socket = io("https://christianmacarthur:3005/", {
     extraHeaders: {
       Authorization: token,
     },
@@ -33,7 +34,8 @@ function Notes() {
 
   useEffect(() => {
     isLogged();
-    fetchNotesSockets();
+    // fetchNotesSockets();
+    fetchNotes();
   }, [user.id, token]);
 
   const llama = async () => {
@@ -159,9 +161,13 @@ function Notes() {
       </div>
       <div className="flex justify-center items-center h-screen">
         <form
-          onSubmit={() => addTaskSockets()}
+          onSubmit={() => addTask()}
           className="flex justify-center gap-4 flex-col duration-150 transition-all"
         >
+          {/* <div className="flex flex-row items-center">
+              <Progress />
+            </div> */}
+
           {notes.length > 0 ? (
             notes
               .slice()
@@ -181,6 +187,7 @@ function Notes() {
               {/* <h2>Click the button to create a new note</h2> */}
             </div>
           )}
+
           <div className="flex flex-row items-center">
             <h2>{llamaResponse}</h2>
           </div>
