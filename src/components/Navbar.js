@@ -3,7 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import chevron_right from "../assets/icons/chevron-right.svg";
 
-const api = axios.create({ baseURL: "http://localhost:3001" });
+// const api = axios.create({ baseURL: "http://localhost:3001" });
+const api = axios.create({ baseURL: "https://christianmacarthur.com:3004/" });
 
 function Navbar() {
   const navigat = useNavigate();
@@ -41,8 +42,6 @@ function Navbar() {
           </button>
         </div>
       </div>
-
-      
     </>
   );
 }
