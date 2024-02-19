@@ -1,11 +1,8 @@
+import RoutesComponent from "./components/RoutesComponents";
 import Home from "./pages/Home";
 
 function App() {
-  return (
-    <div className="overflow-y-hidden">
-      <Home />
-    </div>
-  );
+  return <RoutesComponent />;
 }
 
 export default App;

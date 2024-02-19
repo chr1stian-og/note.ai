@@ -1,76 +1,48 @@
 import login from "../assets/icons/log-in.svg";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import chevron_right from "../assets/icons/chevron-right.svg";
+
+const api = axios.create({ baseURL: "http://localhost:3001" });
 
 function Navbar() {
+  const navigat = useNavigate();
+
+  const signout = () => {
+    api
+      .get("/api/signout")
+      .then((res) => {
+        if (
+          res.data.token === "Token is invalid, Please Log in." ||
+          res.data.token === null ||
+          res.data.token === undefined
+        ) {
+          window.open("http://localhost:3000/", "_self");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
   return (
     <>
-      <div className="navbar bg-base-100">
+      <div className="navbar">
         <div className="navbar-start">
-          <div className="dropdown">
-            <div
-              tabIndex={0}
-              role="button"
-              className="btn btn-ghost btn-circle"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16M4 18h7"
-                />
-              </svg>
-            </div>
-            <ul
-              tabIndex={0}
-              className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
-            >
-              <li>
-                <a>Homepage</a>
-              </li>
-              <li>
-                <a>Portfolio</a>
-              </li>
-              <li>
-                <a>About</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div className="navbar-center">
-          <a className="hover:cursor-default font-bold text-white text-xl">
-            note.ai
+          <a className="hover:cursor-default ml-4 font-bold text-white text-xl">
+            note.ai - llama2
           </a>
         </div>
         <div className="navbar-end">
-          {/* <button className="btn btn-ghost btn-circle">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </button> */}
-          <button className="btn btn-ghost btn-circle">
-            <div className="indicator">
-              <img src={login} />
-            </div>
+          <button
+            onClick={signout}
+            className="hover:bg-[#ffffff10] rounded-full p-4 duration-150 transition-all"
+          >
+            <img src={login} />
           </button>
         </div>
       </div>
+
+      
     </>
   );
 }

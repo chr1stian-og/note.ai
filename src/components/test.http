@@ -1,0 +1,8 @@
+P0ST http://localhost:11434/api/generate HTTP/1.1
+
+
+{
+    model: "llama2",
+    prompt: "1+1",
+
+}

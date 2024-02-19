@@ -2,11 +2,20 @@ import Navbar from "../components/Navbar";
 import Notes from "../components/Notes";
 import FeatherButton from "../components/FeatherButton";
 import Footer from "../components/Footer";
-function Home() {
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+
+function Home({ user }) {
+  let navigate = useNavigate();
+
+  // useEffect(() => {
+  //   if (user.id === 0) return navigate("/login", { replace: true });
+  // }, [user]);
+
   return (
-    <div>
+    <div className="h-screen">
       <Navbar />
-      <Notes />
+      <Notes user={user} />
       {/* <FeatherButton /> */}
       {/* <Footer /> */}
     </div>

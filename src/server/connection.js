@@ -8,11 +8,23 @@ const axios = require("axios");
 const https = require("https");
 const fs = require("fs");
 const mysql = require("mysql");
+const bcrypt = require("bcrypt");
+const socketIO = require("socket.io");
+const http = require("http");
 
 //Glabal variables
 const app = express();
+const server = http.createServer(app);
+const io = socketIO(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  },
+});
 
-let TOKEN;
+let TOKEN, ID;
 
 const pool = mysql.createPool({
   host: "noteai.c1k2keugaxsb.af-south-1.rds.amazonaws.com",
@@ -24,12 +36,9 @@ const pool = mysql.createPool({
   handshakeTimeout: 30000, // 30 seconds, adjust as needed
 });
 
-// firebaseAuth.initializeApp({
-//   credential: firebaseAuth.credential.cert(credentials),
-// });
-
-const ALLOWED_ORIGIN = process.env.REACT_APP_LOCAL_API;
+const ALLOWED_ORIGIN = process.env.LOCAL_API;
 const PORT = process.env.PORT || 3001;
+const SOCKET_PORT = process.env.SOCKET_PORT || 3002;
 
 const LOG_PATH = "/var/log/email-tester/connection.log";
 
@@ -52,6 +61,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     // origin: ALLOWED_ORIGIN,
+    // origin: "http://localhost:3000",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -76,6 +86,9 @@ app.use(
 //unsecure server
 try {
   app.listen(PORT, () => LOGGER.info(`Backend on port ${PORT}...`));
+  server.listen(SOCKET_PORT, () =>
+    LOGGER.info(`Socket on port ${SOCKET_PORT}...`)
+  );
 } catch (e) {
   LOGGER.error(
     "An error ocurred with the server. Read the error log for more details.",
@@ -84,11 +97,64 @@ try {
 }
 
 //Functions
-function sendResponse(res, status, text, err) {
-  !res.headersSent &&
-    (console.log("Sending response:", text + (err ? " " + err : "")),
-    res.status(status).json(text + (err ? " " + err : "")));
-}
+
+//websockets operations
+io.on("connection", (socket) => {
+  //Fetch notes
+  socket.on("clientData", (data) => {
+    const query = "SELECT content, isCompleted  FROM notes WHERE user_id = ?";
+    pool.query(query, [ID], (err, results) => {
+      if (err) {
+        console.error("Error fetching notes:", err);
+        socket.emit("serverData", {
+          error: "Internal Server Error",
+        });
+      }
+
+      socket.emit("serverData", results);
+    });
+  });
+
+  //new task
+  socket.on("newTask", (data) => {
+    const { newTask, userId } = data;
+    const query =
+      "INSERT INTO notes (content, isCompleted, user_id) VALUES (?, ?, ?)";
+    pool.query(query, [newTask, 0, userId], (err, results) => {
+      if (err) {
+        console.error("Error adding a new note:", err);
+        socket.emit("serverData", {
+          error: "Internal Server Error",
+        });
+      }
+      // Return the ID of the newly created note
+      socket.emit("serverData", {
+        id: results.insertId,
+        message: "Note added successfully",
+      });
+    });
+  });
+
+  //update task
+  socket.on("updateTask", (data) => {
+    const { id, userId } = data;
+    const query =
+      "UPDATE notes SET isCompleted = 1 WHERE id = ? AND user_id = ?";
+    pool.query(query, [id, userId], (err, results) => {
+      if (err) {
+        console.error("Error updating note:", err);
+        socket.emit("serverData", {
+          error: "Internal Server Error",
+        });
+      }
+      // Return the ID of the newly created note
+      socket.emit("serverData", {
+        id: results.insertId,
+        message: "Note updated successfully",
+      });
+    });
+  });
+});
 
 function timeoutMiddleware(req, res, next) {
   const timer = 3600;
@@ -121,7 +187,11 @@ const authenticateToken = (req, res, next) => {
     TOKEN || authHeader,
     process.env.ACCESS_TOKEN_SECRET,
     (err, user) => {
-      if (err) return res.json("Token is invalid, Log in.");
+      if (err)
+        return res.json({
+          id: 0,
+          token: "Token is invalid, Please Log in.",
+        });
       req.user = user;
       next();
     }
@@ -130,12 +200,13 @@ const authenticateToken = (req, res, next) => {
 
 const testToken = (res) => {
   axios
-    .get("http://noteai.christianmacarthur/api/testtoken", {
+    .get("http://localhost:3001/api/testtoken", {
       headers: {
         authorization: TOKEN,
       },
     })
     .then((response) => {
+      LOGGER.info("Token is valid");
       return res.status(200).json(response.data);
     })
     .catch((error) => {
@@ -146,6 +217,16 @@ const testToken = (res) => {
 
 //endpoints
 app.use(timeoutMiddleware);
+
+app.post("/api/llama", authenticateToken, (req, res) => {
+  const model = "llama2";
+  const { prompt } = req.body;
+  console.log(prompt);
+});
+
+app.get("/api/testToken", authenticateToken, (req, res) => {
+  res.status(200).json({ token: TOKEN, id: ID });
+});
 
 app.get("/api/testdb", (req, res) => {
   // Try to connect to the database and execute a simple query
@@ -190,7 +271,7 @@ app.post("/api/newNote", (req, res) => {
 });
 
 //get notes
-app.get("/api/notes/:userId", (req, res) => {
+app.get("/api/notes/:userId", authenticateToken, (req, res) => {
   const userId = req.params.userId;
 
   // Retrieve notes for the specified user from the database
@@ -206,20 +287,108 @@ app.get("/api/notes/:userId", (req, res) => {
   });
 });
 
-app.get("/api/newUser", (req, res) => {
-  const username = "daniel";
-  const password = "df59c2577";
+app.post("/api/login", (req, res) => {
+  const { email, password } = req.body;
 
-  const query = " insert into users (username, password) values (?, ?)";
-  pool.query(query, [username, password], (err, results) => {
+  // Check if the user is already logged in by testing the token
+  if (testToken === "token is valid") {
+    return res.status(200).json({ token: TOKEN, id: "" });
+  }
+
+  // Retrieve user information based on the provided email
+  const query = "SELECT id, email, password FROM users WHERE email = ?";
+  pool.query(query, [email], (err, results) => {
     if (err) {
-      console.log(err);
-      return res.status(500).json({ error: "internal server error" });
+      console.error("Error fetching user:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
     }
-    res
-      .status(201)
-      .json({ id: results.insertId, message: "User created successfully" });
+
+    // Check if the user exists
+    if (results.length === 0) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    // Compare the provided password with the hashed password from the database
+    let user = results[0];
+    bcrypt.compare(password, user.password, (bcryptErr, passwordMatch) => {
+      if (bcryptErr) {
+        console.error("Error comparing passwords:", bcryptErr);
+        return res.status(500).json({ error: "Internal Server Error" });
+      }
+
+      if (!passwordMatch) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      // Successful login
+      try {
+        const options = {
+          expiresIn: "10m",
+        };
+
+        const accessToken = jwt.sign(
+          { email, password },
+          process.env.ACCESS_TOKEN_SECRET,
+          options
+        );
+        TOKEN = accessToken;
+        ID = user.id;
+        return res.status(200).json({
+          id: user.id,
+          token: accessToken,
+          message: "Loggin successfully",
+        });
+      } catch (error) {
+        console.log(error);
+        return res
+          .status(401)
+          .json({ error: "Problem while creating the token" });
+      }
+    });
   });
+});
+
+app.post("/api/signin", async (req, res) => {
+  const { email, password } = req.body;
+
+  // Hash the password before storing it in the database
+  bcrypt.hash(password, 10, (err, hashedPassword) => {
+    if (err) {
+      console.error("Error hashing password:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+
+    // Insert the new user into the database
+    const insertQuery = "INSERT INTO users (email, password) VALUES (?, ?)";
+    pool.query(insertQuery, [email, hashedPassword], (insertErr, results) => {
+      if (insertErr) {
+        console.error("Error creating a new user:", insertErr);
+        return res.status(500).json({ error: "Internal Server Error" });
+      }
+      // Successful sign-in
+      axios
+        .post("http://localhost:3001/api/login", {
+          email: email,
+          password: password,
+        })
+        .then((response) => {
+          LOGGER.info(response.data);
+          return res.status(200).json(response.data);
+        })
+        .catch((error) => {
+          LOGGER.error(error);
+          return res.status(403).json("Token is invalid");
+        });
+    });
+  });
+});
+
+app.get("/api/signout", (req, res) => {
+  TOKEN = null;
+  ID = null;
+  return res
+    .status(200)
+    .json({ token: TOKEN, message: "User logged out successfully" });
 });
 
 // API Endpoint to Fetch Data
@@ -268,89 +437,4 @@ app.get("/api/data", (req, res) => {
       res.status(200).json(results);
     }
   });
-});
-
-app.get("/api/test", (req, res) => {
-  res.json("Hello World");
-});
-
-// app.get("/api/testFirebase", (req, res) => {
-//   res.json(auth.currentUser);
-// });
-
-app.get("/api/token", (req, res) => {
-  testToken(res);
-});
-
-app.get("/api/getCounters", (req, res) => {
-  const db2 = firebaseAuth.firestore();
-
-  db2
-    .collection("countTests")
-    .get()
-    .then((querySnapshot) => {
-      const counters = [];
-      querySnapshot.forEach((doc) => {
-        res.json(doc.data().email);
-      });
-    })
-    .catch((error) => {
-      res.json("Error getting documents: " + error);
-    });
-});
-
-app.get("/api/testToken", authenticateToken, (req, res) => {
-  res.json("Token is valid");
-});
-
-// app.post("/api/signup", async (req, res) => {
-//   const { email, password } = req.body || {
-//     email: "christian@gmail.com",
-//     password: "christian",
-//   };
-
-//   try {
-//     const userResponse = await firebaseAuth.auth().createUser({
-//       email: email,
-//       password: password,
-//       emailVerified: true,
-//       disabled: false,
-//     });
-//     return res.status(200).json(userResponse);
-//   } catch (e) {
-//     LOGGER.error(e);
-//     return res.status(500).json(e.message);
-//   }
-// });
-
-app.get("/api/login", async (req, res) => {
-  const { email, password } = req.body || {
-    email: "informapa@clubnet.mz",
-    password: "Informapa2023#",
-  };
-
-  const isLoggedIn = auth.currentUser;
-  if (isLoggedIn) {
-    return res.json({ accessToken: TOKEN });
-  }
-
-  try {
-    const login = await signInWithEmailAndPassword(auth, email, password);
-
-    if (login) {
-      const options = {
-        expiresIn: "10m",
-      };
-
-      const accessToken = jwt.sign(
-        { email, password },
-        process.env.ACCESS_TOKEN_SECRET,
-        options
-      );
-      TOKEN = accessToken;
-      return res.status(200).json({ accessToken: accessToken });
-    }
-  } catch (error) {
-    return res.status(401).json({ error: error.message });
-  }
 });
