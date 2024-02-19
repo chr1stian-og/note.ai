@@ -1,8 +1,5 @@
-P0ST http://localhost:11434/api/generate HTTP/1.1
-
-
+POST https://fc11-34-27-14-41.ngrok-free.app/
 {
-    model: "llama2",
-    prompt: "1+1",
-
+    model: "llama2"
+    prompt: "1+1"
 }

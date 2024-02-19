@@ -27,13 +27,13 @@ const io = socketIO(server, {
 let TOKEN, ID;
 
 const pool = mysql.createPool({
-  host: "noteai.c1k2keugaxsb.af-south-1.rds.amazonaws.com",
-  user: process.env.MYSQL_USERNAME,
-  port: 3306,
-  database: "noteai",
-  password: process.env.MYSQL_PASSWORD + "#",
-  connectionLimit: 10, // Adjust according to your needs
-  handshakeTimeout: 30000, // 30 seconds, adjust as needed
+  // host: "noteai.c1k2keugaxsb.af-south-1.rds.amazonaws.com",
+  // user: process.env.MYSQL_USERNAME,
+  // port: 3306,
+  // database: "noteai",
+  // password: process.env.MYSQL_PASSWORD + "#",
+  // connectionLimit: 10, // Adjust according to your needs
+  // handshakeTimeout: 30000, // 30 seconds, adjust as needed
 });
 
 const ALLOWED_ORIGIN = process.env.LOCAL_API;
