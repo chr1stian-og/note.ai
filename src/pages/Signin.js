@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import validator from "validator";
 
 // const api = axios.create({ baseURL: "http://localhost:3001" });
-const api = axios.create({ baseURL: "https://christianmacarthur.com:3004/" });
+const api = axios.create({ baseURL: process.env.REACT_APP_LOCAL_API });
 
 function Signin({ updateUserId }) {
   let dialogTimeout;
@@ -26,16 +26,21 @@ function Signin({ updateUserId }) {
   }, [token]);
 
   const checkLogin = () => {
-    api.get("/api/testToken").then((res) => {
-      if (
-        res.data.token === "Token is invalid, Please Log in." ||
-        res.data.token === null ||
-        res.data.token === undefined
-      )
-        return;
-      callDialog("");
-      return navigate("/home", { replace: true });
-    });
+    api
+      .get("/api/testToken")
+      .then((res) => {
+        if (
+          res.data.token === "Token is invalid, Please Log in." ||
+          res.data.token === null ||
+          res.data.token === undefined
+        )
+          return;
+        callDialog("");
+        return navigate("/home", { replace: true });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   const callDialog = (message, type, timer) => {
@@ -60,6 +65,7 @@ function Signin({ updateUserId }) {
       api
         .post("/api/signin", { email: user.email, password: user.password })
         .then((res) => {
+          updateUserId(res.data.id);
           setToken(res.data.token);
           checkLogin();
         })
@@ -84,8 +90,8 @@ function Signin({ updateUserId }) {
           <span className="font-bold">{showDialog.message}</span>
         </div>
       </div>
-      <div className="h-screen mt-36 overflow-y-hidden">
-        <span className="flex my-10 text-[#ffffff] min-w-max font-bold text-3xl justify-center items-center align-center">
+      <div className="h-screen overflow-y-hidden">
+        <span className="flex mt-40 my-10 text-[#ffffff] min-w-max font-bold text-3xl justify-center items-center align-center">
           <h1>note.ai</h1>
         </span>
         <form onSubmit={signup} className="flex flex-col gap-2 items-center">
@@ -94,7 +100,7 @@ function Signin({ updateUserId }) {
               setUser({ ...user, email: e.target.value });
             }}
             max={30}
-            placeholder="Email account"
+            placeholder="Email"
             className="rounded-lg border-[#ffffff] px-6 py-2 w-[200px] sm:w-[350px] text-lg"
             min={5}
           />

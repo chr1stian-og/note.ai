@@ -1,14 +1,10 @@
 import login from "../assets/icons/log-in.svg";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import chevron_right from "../assets/icons/chevron-right.svg";
 
 // const api = axios.create({ baseURL: "http://localhost:3001" });
-const api = axios.create({ baseURL: "https://christianmacarthur.com:3004/" });
+const api = axios.create({ baseURL: process.env.REACT_APP_LOCAL_API });
 
 function Navbar() {
-  const navigat = useNavigate();
-
   const signout = () => {
     api
       .get("/api/signout")
@@ -18,7 +14,7 @@ function Navbar() {
           res.data.token === null ||
           res.data.token === undefined
         ) {
-          window.open("http://localhost:3000/", "_self");
+          window.open(process.env.REACT_APP_REMOTE_URL, "_self");
         }
       })
       .catch((err) => {
@@ -26,23 +22,21 @@ function Navbar() {
       });
   };
   return (
-    <>
-      <div className="navbar">
-        <div className="navbar-start">
-          <a className="hover:cursor-default ml-4 font-bold text-white text-xl">
-            note.ai - llama2
-          </a>
-        </div>
-        <div className="navbar-end">
-          <button
-            onClick={signout}
-            className="hover:bg-[#ffffff10] rounded-full p-4 duration-150 transition-all"
-          >
-            <img src={login} />
-          </button>
+    <div className="navbar fixed bg-black z-50">
+      <div className="navbar-start">
+        <a className="hover:cursor-default ml-6 font-bold text-white text-xl">
+          <span className="text-2xl">note.ai</span> v1.0.2
+        </a>
+      </div>
+      <div className="navbar-end">
+        <div
+          onClick={signout}
+          className="hover:bg-[#ffffff10] hover:cursor-pointer mr-6 rounded-full p-4 duration-150 transition-all"
+        >
+          <img src={login} className="hover:cursor-pointer" />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

@@ -17,7 +17,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
-    origin: "http://localhost:3000",
+    // origin: "http://localhost:3000",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -37,8 +37,8 @@ const pool = mysql.createPool({
 });
 
 const ALLOWED_ORIGIN = process.env.LOCAL_API;
-const PORT = process.env.PORT || 3001;
-const SOCKET_PORT = process.env.SOCKET_PORT || 3002;
+const PORT = process.env.PORT || 3003;
+const SOCKET_PORT = process.env.SOCKET_PORT || 3004;
 
 const LOG_PATH = "/var/log/email-tester/connection.log";
 
@@ -200,7 +200,7 @@ const authenticateToken = (req, res, next) => {
 
 const testToken = (res) => {
   axios
-    .get("http://localhost:3001/api/testtoken", {
+    .get("http://localhost:3003/api/testtoken", {
       headers: {
         authorization: TOKEN,
       },
@@ -222,6 +222,10 @@ app.post("/api/llama", authenticateToken, (req, res) => {
   const model = "llama2";
   const { prompt } = req.body;
   console.log(prompt);
+});
+
+app.get("/api/test", (req, res) => {
+  res.status(200).json({ message: "API is working!" });
 });
 
 app.get("/api/testToken", authenticateToken, (req, res) => {
@@ -252,7 +256,7 @@ app.get("/api/testdb", (req, res) => {
 });
 
 //new note
-app.post("/api/newNote", (req, res) => {
+app.post("/api/newNote", authenticateToken, (req, res) => {
   const { content, isCompleted, userId } = req.body;
 
   // Insert the new note into the database
@@ -268,6 +272,62 @@ app.post("/api/newNote", (req, res) => {
       .status(201)
       .json({ id: results.insertId, message: "Note added successfully" });
   });
+});
+
+//update note
+app.post("/api/updateNote", authenticateToken, (req, res) => {
+  const { id, userId } = data;
+
+  // Insert the new note into the database
+  const query = "UPDATE notes SET isCompleted = 1 WHERE id = ? AND user_id = ?";
+  pool.query(query, [id, userId], (err, results) => {
+    if (err) {
+      console.error("Error updating note:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+    // Return the ID of the newly created note
+    res
+      .status(201)
+      .json({ id: results.insertId, message: "Note updated successfully" });
+  });
+});
+
+//complete note
+app.post("/api/completeNote", authenticateToken, (req, res) => {
+  // const { id, userId } = data;
+
+  // // Insert the new note into the database
+  // const query = "UPDATE notes SET isCompleted = 1 WHERE id = ? AND user_id = ?";
+  // pool.query(query, [id, userId], (err, results) => {
+  //   if (err) {
+  //     console.error("Error updating note:", err);
+  //     return res.status(500).json({ error: "Internal Server Error" });
+  //   }
+  //   // Return the ID of the newly created note
+  //   res
+  //     .status(201)
+  //     .json({ id: results.insertId, message: "Note updated successfully" });
+  // });
+  res.status(200).json({ message: "Task completed successfully" });
+});
+
+//delete note
+app.post("/api/deleteNote", authenticateToken, (req, res) => {
+  // const { id, userId } = data;
+
+  // // Insert the new note into the database
+  // const query = "UPDATE notes SET isCompleted = 1 WHERE id = ? AND user_id = ?";
+  // pool.query(query, [id, userId], (err, results) => {
+  //   if (err) {
+  //     console.error("Error updating note:", err);
+  //     return res.status(500).json({ error: "Internal Server Error" });
+  //   }
+  //   // Return the ID of the newly created note
+  //   res
+  //     .status(201)
+  //     .json({ id: results.insertId, message: "Note updated successfully" });
+  // });
+  res.status(200).json({ message: "Task deleted successfully" });
 });
 
 //get notes
@@ -348,7 +408,7 @@ app.post("/api/login", (req, res) => {
   });
 });
 
-app.post("/api/signin", async (req, res) => {
+app.post("/api/signin", (req, res) => {
   const { email, password } = req.body;
 
   // Hash the password before storing it in the database
@@ -367,7 +427,7 @@ app.post("/api/signin", async (req, res) => {
       }
       // Successful sign-in
       axios
-        .post("http://localhost:3001/api/login", {
+        .post("http://localhost:3003/api/login", {
           email: email,
           password: password,
         })

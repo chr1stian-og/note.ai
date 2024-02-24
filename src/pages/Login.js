@@ -5,7 +5,7 @@ import validator from "validator";
 import axios from "axios";
 
 // const api = axios.create({ baseURL: "http://localhost:3001" });
-const api = axios.create({ baseURL: "https://christianmacarthur.com:3004/" });
+const api = axios.create({ baseURL: process.env.REACT_APP_LOCAL_API });
 
 function Login({ updateUserId }) {
   let navigate = useNavigate();
@@ -20,7 +20,7 @@ function Login({ updateUserId }) {
   });
 
   useEffect(() => {
-    checkLogin();
+    // checkLogin();
   }, [token]);
 
   const callDialog = (message, type, timer) => {
@@ -82,8 +82,8 @@ function Login({ updateUserId }) {
           <span className="font-bold">{showDialog.message}</span>
         </div>
       </div>
-      <div className="h-screen mt-36 overflow-y-hidden">
-        <span className="flex my-10 text-[#ffffff] min-w-max font-bold text-3xl justify-center items-center align-center">
+      <div className="h-screen overflow-y-hidden">
+        <span className="flex mt-40 my-10 text-[#ffffff] min-w-max font-bold text-3xl justify-center items-center align-center">
           <h1>note.ai</h1>
         </span>
 

@@ -33,7 +33,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "push": "git add . && git commit -am . && git push origin main",
-    "upload": "npm run build && tar -zcvf build.tar.gz build/ && scp -i ../../../key.cer build.tar.gz root@13.246.12.22:/var/www/html/noteai/ || rm build.tar.gz",
+    "upload": "npm run build && tar -zcvf build.tar.gz build/ && scp -i ../../../key.cer build.tar.gz christian@13.247.21.148:. || rm build.tar.gz",
     "deploy": "npm run push && npm run upload"
   },
   "eslintConfig": {

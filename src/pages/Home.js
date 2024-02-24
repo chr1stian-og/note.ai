@@ -13,11 +13,11 @@ function Home({ user }) {
   // }, [user]);
 
   return (
-    <div className="h-screen">
+    <div className="h-screen overflow-y-hidden">
       <Navbar />
       <Notes user={user} />
       {/* <FeatherButton /> */}
-      {/* <Footer /> */}
+      <Footer />
     </div>
   );
 }

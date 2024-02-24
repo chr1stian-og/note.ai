@@ -15,8 +15,6 @@ function RoutesComponent() {
   return (
     <>
       <Routes>
-        <Route path="*" element={<Home user={user} />} />
-        <Route path="/" element={<Home user={user} />} />
         <Route
           path="/login"
           element={<Login user={user} updateUserId={updateUserId} />}
@@ -25,6 +23,8 @@ function RoutesComponent() {
           path="/signin"
           element={<Signin user={user} updateUserId={updateUserId} />}
         />
+        <Route path="/" element={<Home user={user} />} />
+        <Route path="/home" element={<Home user={user} />} />
       </Routes>
     </>
   );
