@@ -14,7 +14,7 @@ const loading = require("../assets/loading.gif");
 const api = axios.create({ baseURL: process.env.REACT_APP_LOCAL_API });
 // const ai_api = axios.create({ baseURL: "http://localhost:11434/" });
 const ai_api = axios.create({
-  baseURL: "https://45eb-34-125-128-213.ngrok-free.app/",
+  baseURL: "https://92ac-35-199-151-168.ngrok-free.app/",
 });
 
 function Notes() {
@@ -23,6 +23,7 @@ function Notes() {
   let navigate = useNavigate();
 
   //states
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [newTask, setNewTask] = useState({ newTask: "", isCompleted: false });
   const [notes, setNotes] = useState([]);
@@ -51,18 +52,27 @@ function Notes() {
   }, [user.id, token]);
 
   const llama = async () => {
-    const prompt = newTask.newTask;
-    await ai_api
-      .post("/api/generate", { model: "llama2", prompt: prompt, stream: false })
-      .then((res) => {
-        console.log(res.data.response);
-        callDialog("", "success", 0);
-        setLlamaResponse(res.data.response);
-      })
-      .catch((err) => {
-        console.log(err);
-        callDialog("Couldn't get a llama response", "error");
-      });
+    callDialog("The AI model is not operating.", "error");
+    // var notesObjects = [];
+    // for (var i = notes.length - 1; i >= 0; i--) {
+    //   notesObjects.push(notes[i].content);
+    // }
+    // const prompt =
+    //   "Organize the following list of tasks based on priority, just return the tasks: " +
+    //   JSON.stringify(notesObjects);
+    // console.log(prompt);
+    // await ai_api
+    //   .post("/api/generate", { model: "llama2", prompt: prompt, stream: false })
+    //   .then((res) => {
+    //     console.log(res.data.response);
+    //     setNotesAi(res.data.response.split(", "));
+    //     callDialog("", "success", 0);
+    //     setLlamaResponse(res.data.response);
+    //   })
+    //   .catch((err) => {
+    //     console.log(err);
+    //     callDialog("Couldn't get a llama response", "error");
+    //   });
   };
 
   const isLogged = () => {
@@ -132,7 +142,7 @@ function Notes() {
       .get(`/api/notes/${user.id}`, { headers: { authorization: token } })
       .then((res) => {
         setNotes(res.data);
-        console.log(res.data);
+        callDialog("", "success", 0);
       })
       .catch((err) => {
         callDialog("", "error");
@@ -141,7 +151,8 @@ function Notes() {
   };
 
   const addTask = () => {
-    if (newTask === "") return callDialog("Write your task firs", "error");
+    if (newTask.newTask === "")
+      return callDialog("Write your task first", "error");
     api
       .post(
         "/api/newNote",
@@ -157,41 +168,41 @@ function Notes() {
         fetchNotes();
       })
       .catch((err) => {
-        console.err(err);
+        console.log(err);
         callDialog("", "error");
       });
   };
 
-  const updateTask = () => {
-    // if (newTask === "") return callDialog("Write your task firs", "error");
+  const updateTask = (updatedTask, noteId) => {
+    if (updatedTask === "") return callDialog("Write your task first", "error");
+
     api
       .post(
         "/api/updateNote",
         {
-          content: newTask.newTask,
-          userId: user.id,
+          content: updatedTask,
+          noteId: noteId,
         },
         { headers: { authorization: token } }
       )
       .then((res) => {
-        document.getElementById("newTask").value = "";
         fetchNotes();
       })
       .catch((err) => {
-        console.err(err);
+        console.log(err);
         callDialog("", "error");
       });
   };
 
-  const finishTask = () => {
+  const finishTask = (noteId) => {
     api
       .post(
         "/api/completeNote",
-        { userId: user.id, note_id: notes[user.id] },
+        { noteId: noteId },
         { headers: { authorization: token } }
       )
       .then((res) => {
-        callDialog(res.data.message);
+        fetchNotes();
       })
       .catch((err) => {
         callDialog("Couldn't finish the task", "error");
@@ -199,21 +210,47 @@ function Notes() {
       });
   };
 
-  const deleteTask = () => {
+  const deleteTask = (noteId) => {
     api
       .post(
         "/api/deleteNote",
-        { userId: user.id, note_id: notes[user.id] },
+        { noteId: noteId },
         { headers: { authorization: token } }
       )
       .then((res) => {
-        callDialog(res.data.message);
+        fetchNotes();
       })
       .catch((err) => {
         callDialog("Couldn't delete the task", "error");
         console.log(err);
       });
   };
+
+  //automatically deletes passed 24 hours
+  const autoDeleteTask = (noteId) => {
+    api
+      .post(
+        "/api/deleteNote",
+        { noteId: noteId },
+        { headers: { authorization: token } }
+      )
+      .then((res) => {
+        callDialog(res.data.message);
+        fetchNotes();
+      })
+      .catch((err) => {
+        callDialog("Couldn't delete the task", "error");
+        console.log(err);
+      });
+  };
+
+  //hangle the Enter key response
+  function handleKeyDown(event) {
+    if (event.keyCode === 13) {
+      event.preventDefault();
+      addTask();
+    }
+  }
 
   return (
     <>
@@ -228,43 +265,128 @@ function Notes() {
           <span className="font-bold">{showDialog.message}</span>
         </div>
       </div>
-      <form
-        onSubmit={() => addTask()}
-        className="flex justify-center my-20 items-center align-center gap-4 flex-col duration-150 transition-all"
-      >
-        {notes.length > 0 ? (
-          notes
-            .slice()
-            .reverse()
-            .map((note, id) => {
-              return (
-                <div className="flex flex-row gap-2 items-center">
-                  <img
-                    src={x}
-                    width={15}
-                    onClick={deleteTask}
-                    className="opacity-0 hover:opacity-100 hover:cursor-pointer duration-500 transition-all"
-                  />
-                  <h2
-                    key={id}
-                    className={`${note.isCompleted === 0 ? "" : "completed"}`}
-                  >
-                    {note.content}
-                  </h2>
-                  <img
-                    src={check}
-                    width={15}
-                    onClick={finishTask}
-                    className="opacity-0 hover:opacity-100 hover:cursor-pointer duration-500 transition-all"
-                  />
-                </div>
-              );
-            })
-        ) : (
-          <div className="flex flex-row items-center">
-            {/* <h2>Click below to create a new note</h2> */}
+      <div className="flex justify-center my-20 items-center align-center flex-col duration-150 transition-all">
+        <div className="flex gap-2 flex-row">
+          <div className="flex justify-center mx-10 items-center align-center flex-col duration-150 transition-all">
+            {notes.length > 0 ? (
+              notes
+                .slice()
+                .reverse()
+                .map((note, id) => {
+                  var updatedNote = note.content;
+                  return (
+                    <div
+                      key={id}
+                      className="min-w-[200px] flex flex-row items-center"
+                    >
+                      <span
+                        onClick={() => deleteTask(note.id)}
+                        className={` ${
+                          notes.length !== 0 ? "w-[200px]" : "w-[50px]"
+                        } flex justify-end p-5 align-center duration-300 transition-all items-center opacity-0 hover:opacity-100 hover:cursor-pointer `}
+                      >
+                        <img
+                          src={x}
+                          width={15}
+                          className="duration-300 transition-all"
+                        />
+                      </span>
+
+                      <h2
+                        key={id}
+                        // onKeyDown={handleKeyDown}
+                        className={`${
+                          note.isCompleted === 0 ? "" : "completed"
+                        } px-5 py-2 `}
+                        onClick={() => {
+                          note.isCompleted === 0 && setIsEditing(true);
+                        }}
+                        onBlur={() => updateTask(updatedNote, note.id)}
+                        contentEditable={isEditing}
+                        onInput={(e) => {
+                          updatedNote = e.target.textContent;
+                        }}
+                      >
+                        {note.content}
+                      </h2>
+                      <span
+                        onClick={() => finishTask(note.id)}
+                        className={`${
+                          notes.length !== 0 ? "w-[200px]" : "w-[50px]"
+                        } flex justify-start p-5 align-center duration-300 transition-all items-center opacity-0 hover:opacity-100 hover:cursor-pointer`}
+                      >
+                        <img
+                          src={check}
+                          width={15}
+                          className=" duration-300 transition-all"
+                        />
+                      </span>
+                    </div>
+                  );
+                })
+            ) : (
+              <div className="flex flex-row items-center">
+                {/* <h2>Click below to create a new note</h2> */}
+              </div>
+            )}
           </div>
-        )}
+
+          {notesAi.length !== 0 && (
+            <div className="flex justify-center mx-10 items-center align-center flex-col duration-150 transition-all">
+              {notesAi.length > 0 ? (
+                notes
+                  .slice()
+                  .reverse()
+                  .map((note, id) => {
+                    return (
+                      <div
+                        key={id}
+                        className=" min-w-[200px] flex flex-row items-center"
+                      >
+                        <span
+                          onClick={() => deleteTask(note.id)}
+                          className={`${
+                            notes.length !== 0 ? "w-[200px]" : "w-[50px]"
+                          } flex justify-end p-5 align-center duration-300 transition-all items-center opacity-0 hover:opacity-100 hover:cursor-pointer`}
+                        >
+                          <img
+                            src={x}
+                            width={15}
+                            className=" duration-300 transition-all"
+                          />
+                        </span>
+
+                        <h2
+                          key={id}
+                          className={`${
+                            note.isCompleted === 0 ? "" : "completed"
+                          }`}
+                        >
+                          {note.content}
+                        </h2>
+                        <span
+                          onClick={() => finishTask(note.id)}
+                          className={`${
+                            notes.length !== 0 ? "w-[200px]" : "w-[50px]"
+                          } flex justify-start p-5 align-center duration-300 transition-all items-center opacity-0 hover:opacity-100 hover:cursor-pointer`}
+                        >
+                          <img
+                            src={check}
+                            width={15}
+                            className="duration-300 transition-all"
+                          />
+                        </span>
+                      </div>
+                    );
+                  })
+              ) : (
+                <div className="flex flex-row items-center">
+                  {/* <h2>Click below to create a new note</h2> */}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-row items-center">
           <h2>{llamaResponse}</h2>
@@ -272,6 +394,7 @@ function Notes() {
         <div className="absolute z-50 bottom-8 w-full flex justify-center">
           <input
             ref={inputRef}
+            onKeyDown={handleKeyDown}
             id="newTask"
             className=" border-[#ffffff1c] hover:border-[#ffffff28] z-50 bg-transparent rounded-lg focus:w-[500px] focus:cursor-text focus:h-full cursor-default border-8 h-1 focus:border-transparent duration-150 transition-all"
             placeholder=""
@@ -280,7 +403,7 @@ function Notes() {
             }}
           />
         </div>
-      </form>
+      </div>
       <div className="absolute z-50 bottom-8 right-6">
         <button
           onClick={llama}

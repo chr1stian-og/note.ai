@@ -69,32 +69,32 @@ app.use(
 );
 
 // secure server
-// const ssl = {
-//   key: fs.readFileSync(
-//     "/etc/letsencrypt/live/christianmacarthur.com/privkey.pem"
-//   ),
-//   cert: fs.readFileSync(
-//     "/etc/letsencrypt/live/christianmacarthur.com/cert.pem"
-//   ),
-//   ca: fs.readFileSync("/etc/letsencrypt/live/christianmacarthur.com/chain.pem"),
-// };
+const ssl = {
+  key: fs.readFileSync(
+    "/etc/letsencrypt/live/christianmacarthur.com/privkey.pem"
+  ),
+  cert: fs.readFileSync(
+    "/etc/letsencrypt/live/christianmacarthur.com/cert.pem"
+  ),
+  ca: fs.readFileSync("/etc/letsencrypt/live/christianmacarthur.com/chain.pem"),
+};
 
-// https.createServer(ssl, app).listen(PORT, () => {
-//   LOGGER.info(`Secure server running on port ${PORT}...`);
-// });
+https.createServer(ssl, app).listen(PORT, () => {
+  LOGGER.info(`Secure server running on port ${PORT}...`);
+});
 
 //unsecure server
-try {
-  app.listen(PORT, () => LOGGER.info(`Backend on port ${PORT}...`));
-  server.listen(SOCKET_PORT, () =>
-    LOGGER.info(`Socket on port ${SOCKET_PORT}...`)
-  );
-} catch (e) {
-  LOGGER.error(
-    "An error ocurred with the server. Read the error log for more details.",
-    e.message
-  );
-}
+// try {
+//   app.listen(PORT, () => LOGGER.info(`Backend on port ${PORT}...`));
+//   server.listen(SOCKET_PORT, () =>
+//     LOGGER.info(`Socket on port ${SOCKET_PORT}...`)
+//   );
+// } catch (e) {
+//   LOGGER.error(
+//     "An error ocurred with the server. Read the error log for more details.",
+//     e.message
+//   );
+// }
 
 //Functions
 
@@ -276,58 +276,60 @@ app.post("/api/newNote", authenticateToken, (req, res) => {
 
 //update note
 app.post("/api/updateNote", authenticateToken, (req, res) => {
-  const { id, userId } = data;
+  const { content, noteId } = req.body;
 
   // Insert the new note into the database
-  const query = "UPDATE notes SET isCompleted = 1 WHERE id = ? AND user_id = ?";
-  pool.query(query, [id, userId], (err, results) => {
+  const query = "UPDATE notes SET content = ? WHERE id = ?";
+  pool.query(query, [content, noteId], (err, results) => {
     if (err) {
       console.error("Error updating note:", err);
       return res.status(500).json({ error: "Internal Server Error" });
     }
     // Return the ID of the newly created note
-    res
-      .status(201)
-      .json({ id: results.insertId, message: "Note updated successfully" });
+    res.status(201).json({ message: "Note updated successfully" });
   });
 });
 
-//complete note
 app.post("/api/completeNote", authenticateToken, (req, res) => {
-  // const { id, userId } = data;
+  const noteId = req.body.noteId;
 
-  // // Insert the new note into the database
-  // const query = "UPDATE notes SET isCompleted = 1 WHERE id = ? AND user_id = ?";
-  // pool.query(query, [id, userId], (err, results) => {
-  //   if (err) {
-  //     console.error("Error updating note:", err);
-  //     return res.status(500).json({ error: "Internal Server Error" });
-  //   }
-  //   // Return the ID of the newly created note
-  //   res
-  //     .status(201)
-  //     .json({ id: results.insertId, message: "Note updated successfully" });
-  // });
-  res.status(200).json({ message: "Task completed successfully" });
+  // Toggle the state of the note in the database
+  const updateQuery =
+    "UPDATE notes SET isCompleted = NOT isCompleted WHERE id = ?";
+  pool.query(updateQuery, [noteId], (err, results) => {
+    if (err) {
+      console.error("Error updating note state:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+
+    // Check if the note was found and updated
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    res.status(200).json({ message: "Note state updated successfully" });
+  });
 });
 
 //delete note
 app.post("/api/deleteNote", authenticateToken, (req, res) => {
-  // const { id, userId } = data;
+  const noteId = req.body.noteId;
 
-  // // Insert the new note into the database
-  // const query = "UPDATE notes SET isCompleted = 1 WHERE id = ? AND user_id = ?";
-  // pool.query(query, [id, userId], (err, results) => {
-  //   if (err) {
-  //     console.error("Error updating note:", err);
-  //     return res.status(500).json({ error: "Internal Server Error" });
-  //   }
-  //   // Return the ID of the newly created note
-  //   res
-  //     .status(201)
-  //     .json({ id: results.insertId, message: "Note updated successfully" });
-  // });
-  res.status(200).json({ message: "Task deleted successfully" });
+  // Delete the note from the database
+  const deleteQuery = "DELETE FROM notes WHERE id = ?";
+  pool.query(deleteQuery, [noteId], (err, results) => {
+    if (err) {
+      console.error("Error deleting note:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+
+    // Check if the note was found and deleted
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    res.status(200).json({ message: "Note deleted successfully" });
+  });
 });
 
 //get notes
@@ -335,7 +337,7 @@ app.get("/api/notes/:userId", authenticateToken, (req, res) => {
   const userId = req.params.userId;
 
   // Retrieve notes for the specified user from the database
-  const query = "SELECT content, isCompleted  FROM notes WHERE user_id = ?";
+  const query = "SELECT content, isCompleted, id  FROM notes WHERE user_id = ?";
   pool.query(query, [userId], (err, results) => {
     if (err) {
       console.error("Error fetching notes:", err);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import validator from "validator";
@@ -8,6 +8,7 @@ import axios from "axios";
 const api = axios.create({ baseURL: process.env.REACT_APP_LOCAL_API });
 
 function Login({ updateUserId }) {
+  const inputRef = useRef(null);
   let navigate = useNavigate();
   let dialogTimeout;
 
@@ -20,7 +21,8 @@ function Login({ updateUserId }) {
   });
 
   useEffect(() => {
-    // checkLogin();
+    inputRef.current.focus();
+    checkLogin();
   }, [token]);
 
   const callDialog = (message, type, timer) => {
@@ -69,6 +71,13 @@ function Login({ updateUserId }) {
       });
   };
 
+  //hangle the Enter key response
+  function handleKeyDown(event) {
+    if (event.keyCode === 13) {
+      login();
+    }
+  }
+
   return (
     <>
       <div
@@ -87,11 +96,10 @@ function Login({ updateUserId }) {
           <h1>note.ai</h1>
         </span>
 
-        <form
-          onSubmit={() => login()}
-          className="flex flex-col gap-2 items-center"
-        >
+        <div className="flex flex-col gap-2 items-center">
           <input
+            onKeyDown={handleKeyDown}
+            ref={inputRef}
             onChange={(e) => {
               setUser({ ...user, email: e.target.value });
             }}
@@ -101,6 +109,7 @@ function Login({ updateUserId }) {
             min={5}
           />
           <input
+            onKeyDown={handleKeyDown}
             onChange={(e) => {
               setUser({ ...user, password: e.target.value });
             }}
@@ -111,7 +120,7 @@ function Login({ updateUserId }) {
             placeholder="Password"
             className="rounded-lg border-[#ffffff] px-6 py-2 w-[200px] sm:w-[350px] text-lg"
           />
-        </form>
+        </div>
         <div className="flex flex-col justify-center align-center items-center gap-2 m-2">
           <button
             onClick={login}

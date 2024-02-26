@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import validator from "validator";
 
@@ -9,6 +8,7 @@ import validator from "validator";
 const api = axios.create({ baseURL: process.env.REACT_APP_LOCAL_API });
 
 function Signin({ updateUserId }) {
+  const inputRef = useRef(null);
   let dialogTimeout;
   let navigate = useNavigate();
 
@@ -22,6 +22,7 @@ function Signin({ updateUserId }) {
   });
 
   useEffect(() => {
+    inputRef.current.focus();
     checkLogin();
   }, [token]);
 
@@ -77,6 +78,13 @@ function Signin({ updateUserId }) {
     }
   };
 
+  //hangle the Enter key response
+  function handleKeyDown(event) {
+    if (event.keyCode === 13) {
+      signup();
+    }
+  }
+
   return (
     <>
       <div
@@ -94,8 +102,10 @@ function Signin({ updateUserId }) {
         <span className="flex mt-40 my-10 text-[#ffffff] min-w-max font-bold text-3xl justify-center items-center align-center">
           <h1>note.ai</h1>
         </span>
-        <form onSubmit={signup} className="flex flex-col gap-2 items-center">
+        <div onSubmit={signup} className="flex flex-col gap-2 items-center">
           <input
+            onKeyDown={handleKeyDown}
+            ref={inputRef}
             onChange={(e) => {
               setUser({ ...user, email: e.target.value });
             }}
@@ -105,6 +115,7 @@ function Signin({ updateUserId }) {
             min={5}
           />
           <input
+            onKeyDown={handleKeyDown}
             onChange={(e) => {
               setUser({ ...user, password: e.target.value });
             }}
@@ -115,6 +126,7 @@ function Signin({ updateUserId }) {
             className="rounded-lg  border-[#ffffff] px-6 py-2 w-[200px] sm:w-[350px] text-lg"
           />
           <input
+            onKeyDown={handleKeyDown}
             onChange={(e) => {
               setPasswordToMatch(e.target.value);
             }}
@@ -124,7 +136,7 @@ function Signin({ updateUserId }) {
             placeholder="Confirm Password"
             className="rounded-lg border-[#ffffff] px-6 py-2 w-[200px] sm:w-[350px] text-lg"
           />
-        </form>
+        </div>
         <div className="flex flex-col justify-center align-center items-center gap-2">
           <button
             onClick={signup}
