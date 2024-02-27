@@ -139,6 +139,10 @@ function Login({ updateUserId }) {
           </Link>
         </div>
       </div>
+
+      <div className="absolute bottom-4 flex justify-center items-center w-full">
+        <h2 className="text-[#ffffff40]">Email and password: test@test.com</h2>
+      </div>
     </>
   );
 }
