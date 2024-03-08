@@ -276,6 +276,7 @@ function Notes() {
                   var updatedNote = note.content;
                   return (
                     <div
+                      draggable
                       key={id}
                       className="min-w-[200px] flex flex-row items-center"
                     >

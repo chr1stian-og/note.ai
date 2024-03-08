@@ -69,32 +69,32 @@ app.use(
 );
 
 // secure server
-const ssl = {
-  key: fs.readFileSync(
-    "/etc/letsencrypt/live/christianmacarthur.com/privkey.pem"
-  ),
-  cert: fs.readFileSync(
-    "/etc/letsencrypt/live/christianmacarthur.com/cert.pem"
-  ),
-  ca: fs.readFileSync("/etc/letsencrypt/live/christianmacarthur.com/chain.pem"),
-};
+// const ssl = {
+//   key: fs.readFileSync(
+//     "/etc/letsencrypt/live/christianmacarthur.com/privkey.pem"
+//   ),
+//   cert: fs.readFileSync(
+//     "/etc/letsencrypt/live/christianmacarthur.com/cert.pem"
+//   ),
+//   ca: fs.readFileSync("/etc/letsencrypt/live/christianmacarthur.com/chain.pem"),
+// };
 
-https.createServer(ssl, app).listen(PORT, () => {
-  LOGGER.info(`Secure server running on port ${PORT}...`);
-});
+// https.createServer(ssl, app).listen(PORT, () => {
+//   LOGGER.info(`Secure server running on port ${PORT}...`);
+// });
 
 //unsecure server
-// try {
-//   app.listen(PORT, () => LOGGER.info(`Backend on port ${PORT}...`));
-//   server.listen(SOCKET_PORT, () =>
-//     LOGGER.info(`Socket on port ${SOCKET_PORT}...`)
-//   );
-// } catch (e) {
-//   LOGGER.error(
-//     "An error ocurred with the server. Read the error log for more details.",
-//     e.message
-//   );
-// }
+try {
+  app.listen(PORT, () => LOGGER.info(`Backend on port ${PORT}...`));
+  server.listen(SOCKET_PORT, () =>
+    LOGGER.info(`Socket on port ${SOCKET_PORT}...`)
+  );
+} catch (e) {
+  LOGGER.error(
+    "An error ocurred with the server. Read the error log for more details.",
+    e.message
+  );
+}
 
 //Functions
 
