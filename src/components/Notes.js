@@ -53,6 +53,8 @@ function Notes() {
 
   const llama = async () => {
     callDialog("The AI model is not operating.", "error");
+    fetchNotes();
+
     // var notesObjects = [];
     // for (var i = notes.length - 1; i >= 0; i--) {
     //   notesObjects.push(notes[i].content);
