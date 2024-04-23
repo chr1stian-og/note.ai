@@ -9,20 +9,11 @@ const https = require("https");
 const fs = require("fs");
 const mysql = require("mysql");
 const bcrypt = require("bcrypt");
-const socketIO = require("socket.io");
 const http = require("http");
 
 //Glabal variables
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server, {
-  cors: {
-    // origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  },
-});
 
 let TOKEN, ID;
 
@@ -37,7 +28,7 @@ const pool = mysql.createPool({
 });
 
 const ALLOWED_ORIGIN = process.env.LOCAL_API;
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 8080;
 const SOCKET_PORT = process.env.SOCKET_PORT || 3004;
 
 const LOG_PATH = "/var/log/email-tester/connection.log";
@@ -69,32 +60,29 @@ app.use(
 );
 
 // secure server
-const ssl = {
-  key: fs.readFileSync(
-    "/etc/letsencrypt/live/christianmacarthur.com/privkey.pem"
-  ),
-  cert: fs.readFileSync(
-    "/etc/letsencrypt/live/christianmacarthur.com/cert.pem"
-  ),
-  ca: fs.readFileSync("/etc/letsencrypt/live/christianmacarthur.com/chain.pem"),
-};
+// const ssl = {
+//   key: fs.readFileSync(
+//     "/etc/letsencrypt/live/christianmacarthur.com/privkey.pem"
+//   ),
+//   cert: fs.readFileSync(
+//     "/etc/letsencrypt/live/christianmacarthur.com/cert.pem"
+//   ),
+//   ca: fs.readFileSync("/etc/letsencrypt/live/christianmacarthur.com/chain.pem"),
+// };
 
-https.createServer(ssl, app).listen(PORT, () => {
-  LOGGER.info(`Secure server running on port ${PORT}...`);
-});
+// https.createServer(ssl, app).listen(PORT, () => {
+//   LOGGER.info(`Secure server running on port ${PORT}...`);
+// });
 
 //unsecure server
-// try {
-//   app.listen(PORT, () => LOGGER.info(`Backend on port ${PORT}...`));
-//   server.listen(SOCKET_PORT, () =>
-//     LOGGER.info(`Socket on port ${SOCKET_PORT}...`)
-//   );
-// } catch (e) {
-//   LOGGER.error(
-//     "An error ocurred with the server. Read the error log for more details.",
-//     e.message
-//   );
-// }
+try {
+  app.listen(PORT, () => LOGGER.info(`Backend on port ${PORT}...`));
+} catch (e) {
+  LOGGER.error(
+    "An error ocurred with the server. Read the error log for more details.",
+    e.message
+  );
+}
 
 //Functions
 
