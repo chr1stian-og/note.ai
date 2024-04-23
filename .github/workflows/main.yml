@@ -24,4 +24,4 @@ jobs:
         run: npm ci
 
       - name: Run connection.js
-        run: node /src/server/connection.js
+        run: node /server/connection.js
