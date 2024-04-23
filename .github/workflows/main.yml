@@ -1,27 +1,26 @@
-name: ESLint Check
+name: Lint Check
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   lint:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: '20.12.2' # Use the Node.js version you prefer
+          node-version: 16
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run ESLint
-        run: npm run lint # Adjust this command based on your ESLint setup
+        run: npm run lint
+
+      - name: Fail workflow if there are lint errors
+        run: exit 1  # This will fail the workflow if there are lint errors
