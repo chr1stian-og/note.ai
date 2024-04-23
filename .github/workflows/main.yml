@@ -1,4 +1,4 @@
-name: Node.js Tests
+name: ESLint Check
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,10 +18,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '20.12.2' # Use the latest available Node.js version
+          node-version: '20.12.2' # Use the Node.js version you prefer
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run connection.js
-        run: node /server/connection.js
+      - name: Run ESLint
+        run: npm run lint # Adjust this command based on your ESLint setup
