@@ -6,21 +6,12 @@ on:
 
 jobs:
   lint:
+    name: lint code base
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code base
+        uses: actions/checkout@v3
 
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: Fail workflow if there are lint errors
-        run: exit 1  # This will fail the workflow if there are lint errors
+      - name: Run super-linter
+        uses: github/super-linter@v3
