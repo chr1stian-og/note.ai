@@ -1,13 +1,14 @@
-<<<<<<< HEAD:.github/workflows/ci.yml
 name: CI
-=======
-name: Lint Check
->>>>>>> refs/remotes/origin/main:.github/workflows/main.yml
 
-on: push
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-<<<<<<< HEAD:.github/workflows/ci.yml
   Test:
     runs-on: ubuntu-latest
 
@@ -24,7 +25,6 @@ jobs:
 
       - name: Run Tests
         run: npm run test
-=======
   lint:
     name: lint code base
     runs-on: ubuntu-latest
@@ -32,7 +32,6 @@ jobs:
     steps:
       - name: Checkout code base
         uses: actions/checkout@v2
-        
+
       - name: Run super-linter
         uses: github/super-linter@v3
->>>>>>> refs/remotes/origin/main:.github/workflows/main.yml
