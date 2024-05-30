@@ -37,8 +37,8 @@ const pool = mysql.createPool({
 });
 
 const ALLOWED_ORIGIN = process.env.LOCAL_API;
-const PORT = process.env.PORT || 3003;
-const SOCKET_PORT = process.env.SOCKET_PORT || 3004;
+const PORT = process.env.PORT || 5003;
+const SOCKET_PORT = process.env.SOCKET_PORT || 5004;
 
 const LOG_PATH = "/var/log/email-tester/connection.log";
 

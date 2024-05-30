@@ -3,17 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "@tsparticles/engine": "^3.2.2",
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.2.2",
+    "@vitest/ui": "^1.6.0",
     "axios": "^1.6.7",
     "bcrypt": "^5.1.1",
     "clsx": "^2.1.0",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.4.4",
     "express": "^4.18.2",
     "framer-motion": "^11.0.6",
@@ -36,9 +36,10 @@
     "winston": "^3.11.0"
   },
   "scripts": {
-    "start": "concurrently \"react-scripts start\" \"nodemon ./src/server/connection.js\" ",
+    "start": "concurrently \"cross-env PORT=3001 react-scripts start\" \"nodemon ./src/server/connection.js\" ",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
     "eject": "react-scripts eject",
     "push": "git add . && git commit -am . && git push origin main",
     "upload": "npm run build && tar -zcvf build.tar.gz build/ && scp -i ../../../key.cer build.tar.gz christian@13.247.21.148:. || rm build.tar.gz",
@@ -63,7 +64,11 @@
     ]
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.5",
+    "@testing-library/react": "^15.0.7",
     "daisyui": "^4.6.3",
-    "tailwindcss": "^3.4.1"
+    "jsdom": "^24.1.0",
+    "tailwindcss": "^3.4.1",
+    "vitest": "^1.6.0"
   }
 }
