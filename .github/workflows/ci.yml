@@ -23,7 +23,5 @@ jobs:
 
       - name: Run Tests
         run: npm run test
-
-      - name: Run Linter
         run: npx playwright install --with-deps
         run: npx playwright test
