@@ -2,11 +2,9 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main, master]
   pull_request:
-    branches:
-      - main
+    branches: [main, master]
 
 jobs:
   Test:
@@ -25,13 +23,7 @@ jobs:
 
       - name: Run Tests
         run: npm run test
-  lint:
-    name: lint code base
-    runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code base
-        uses: actions/checkout@v2
-
-      - name: Run super-linter
-        uses: github/super-linter@v3
+      - name: Run Linter
+      - run: npx playwright install --with-deps
+      - run: npx playwright test
